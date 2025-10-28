@@ -1,3 +1,4 @@
+import { isValid, parse } from "date-fns";
 import * as yup from "yup";
 
 export const formValidator = yup
@@ -17,8 +18,16 @@ export const formValidator = yup
       .min(5, "Age must be at least 5")
       .max(70, "Age must be at most 70"),
     dob: yup
-      .date()
-      .typeError("Please enter a valid date")
-      .required("Date of Birth is required"),
+      .string()
+      .required("Date of Birth is required")
+      .matches(
+        /^(0[1-9]|1[0-2])\/\d{4}$/,
+        "Date must be in MM/YYYY format with 4-digit year"
+      )
+      .test("is-valid-date", "Date must be in MM/YYYY format", (value) => {
+        if (!value) return false;
+        const parsedDate = parse(value, "MM/yyyy", new Date());
+        return isValid(parsedDate);
+      }),
   })
   .required();

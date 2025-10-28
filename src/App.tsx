@@ -1,35 +1,36 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { formValidator } from "./validator/formValidator";
 
 import "./App.css";
 
+const occupations = {
+  Cleaner: "Light Manual",
+  Doctor: "Professional",
+  Author: "White Collar",
+  Farmer: "Heavy Manual",
+  Mechanic: "Heavy Manual",
+  Florist: "Light Manual",
+  Other: "Heavy Manual",
+};
+
+const rating = {
+  Professional: 1.5,
+  "White Collar": 2.25,
+  "Light Manual": 11.5,
+  "Heavy Manual": 31.75,
+};
+
 function App() {
-  const occupations = {
-    Cleaner: "Light Manual",
-    Doctor: "Professional",
-    Author: "White Collar",
-    Farmer: "Heavy Manual",
-    Mechanic: "Heavy Manual",
-    Florist: "Light Manual",
-    Other: "Heavy Manual",
-  };
-
-  const rating = {
-    Professional: 1.5,
-    "White Collar": 2.25,
-    "Light Manual": 11.5,
-    "Heavy Manual": 31.75,
-  };
-
-  const [occup, setOccup] = useState("");
+  const [premium, setPremium] = useState("");
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     watch,
+    getValues,
   } = useForm({
     mode: "onChange",
     defaultValues: {
@@ -42,8 +43,26 @@ function App() {
     resolver: yupResolver(formValidator),
   });
 
-  const onSubmit = (data: any) => {
-    console.log("Form Submitted:", data);
+  const watchOccup = watch("occupation");
+
+  useEffect(() => {
+    calCulatePremium();
+  }, [watchOccup]);
+
+  const calCulatePremium = () => {
+    const { name, age, dob, occupation, amount } = getValues();
+    if (!name || !age || !dob || !occupation || !amount) {
+      return;
+    }
+    const key = occupation as keyof typeof occupations;
+    let occup = occupations[key];
+    const premium =
+      ((amount * rating[occup as keyof typeof rating] * age) / 1000) * 12;
+    setPremium(premium.toFixed(2));
+  };
+
+  const onSubmit = () => {
+    calCulatePremium();
   };
 
   return (
@@ -63,7 +82,6 @@ function App() {
         </div>
         <div className="input-container">
           <label htmlFor="age">Age Next Birthday</label>
-          {/* <input id="age" type="number" /> */}
           <Controller
             name="age"
             control={control}
@@ -74,17 +92,12 @@ function App() {
           {errors.age && <p className="error">{errors.age.message}</p>}
         </div>
         <div className="input-container">
-          <label htmlFor="dob">Date of Birth(mm/YYYY)</label>
-          {/* <input id="dob" type="month" /> */}
+          <label htmlFor="dob">Date of Birth(MM/YYYY)</label>
           <Controller
             name="dob"
             control={control}
             render={({ field }) => (
-              <input
-                {...field}
-                placeholder="Enter your date of birth"
-                type="month"
-              />
+              <input {...field} placeholder="MM/YYYY" type="text" />
             )}
           />
           {errors.dob && <p className="error">{errors.dob.message}</p>}
@@ -127,6 +140,7 @@ function App() {
           />
           {errors.amount && <p className="error">{errors.amount.message}</p>}
         </div>
+        {premium && <h4>Your Premium is: {premium ? ` ${premium}` : "-"}</h4>}
         <button type="submit">Calculate Premium</button>
       </form>
     </div>
