@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+
 import { formValidator } from "./validator/formValidator";
+import { getAgeFromDate } from "./utils/date_util";
 
 import "./App.css";
 
@@ -31,6 +33,7 @@ function App() {
     formState: { errors },
     watch,
     getValues,
+    setValue,
   } = useForm({
     mode: "onChange",
     defaultValues: {
@@ -44,6 +47,15 @@ function App() {
   });
 
   const watchOccup = watch("occupation");
+  const watchDob = watch("dob");
+
+  useEffect(() => {
+    const { dob } = getValues();
+    if (dob) {
+      const age = getAgeFromDate(dob);
+      setValue("age", age);
+    }
+  }, [watchDob]);
 
   useEffect(() => {
     calCulatePremium();
@@ -88,6 +100,7 @@ function App() {
             render={({ field }) => (
               <input {...field} placeholder="Enter a valid age" type="number" />
             )}
+            disabled
           />
           {errors.age && <p className="error">{errors.age.message}</p>}
         </div>

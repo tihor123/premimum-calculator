@@ -1,4 +1,4 @@
-import { isValid, parse } from "date-fns";
+import { isBefore, isValid, parse, subYears } from "date-fns";
 import * as yup from "yup";
 
 export const formValidator = yup
@@ -28,6 +28,17 @@ export const formValidator = yup
         if (!value) return false;
         const parsedDate = parse(value, "MM/yyyy", new Date());
         return isValid(parsedDate);
-      }),
+      })
+      .test(
+        "max-date",
+        "Date must be at least 5 years before today",
+        (value) => {
+          if (!value) return false;
+          const parsed = parse(value, "MM/yyyy", new Date());
+          if (!isValid(parsed)) return false;
+          const fiveYearsAgo = subYears(new Date(), 5);
+          return isBefore(parsed, fiveYearsAgo);
+        }
+      ),
   })
   .required();
